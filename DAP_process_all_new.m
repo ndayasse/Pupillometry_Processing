@@ -1,12 +1,12 @@
 clear;
 
 % change working directory to this expt's
-cd('/Users/nicoleayasse 1/Documents/MATLAB/DAP');
+cd('/Documents/MATLAB/PROJ');
 
 %% Read in Participant Info
 
 % read in participant info sheet
-participant_info = readtable('Participants_DAP.csv');
+participant_info = readtable('Participants_PROJ.csv');
 
 % rename vars
 participant_info.Properties.VariableNames = {'Subject_No','Include'};
@@ -26,7 +26,7 @@ recall_time_ms = 3000; %time in milliseconds of pause from the end of
     %recall the passage
 
 % may want later for naming and saving things, etc.
-folder = '/Users/nicoleayasse 1/Documents/MATLAB/DAP';
+folder = '/Users/nicoleayasse 1/Documents/MATLAB/PROJ';
 
         
 %% What Sample Messages mean (for reference)
@@ -90,22 +90,13 @@ if participant_info{participant,2} ~= 0
 %     participant_info(participant,1)
     
 % Load Sample Report data
-sdir = strcat(folder,'/','DAP_onesubjprocess_',subject_str,'.mat'); %put the name all together
+sdir = strcat(folder,'/','PROJ_onesubjprocess_',subject_str,'.mat'); %put the name all together
 dir_files = dir(sdir); %look for the file that fits that description
     %(in folder, any .mat file with the subject number in it)
 file_name = dir_files(1).name; %find the file name of the (hopefully) only file that fits
 general_name_samprep = file_name(1:end-4); %char of file name minus the .mat, for later
     %general_name possibly not needed??
 load(file_name); %load the data into workspace (table name is tbl_subj_final)
-
-% Load Results File data
-sdir = strcat(folder,'/','DAP_onesubjprocess_resfile_',subject_str,'.mat'); %put the name all together
-dir_files = dir(sdir); %look for the file that fits that description
-    %(in folder, any .mat file with the subject number in it)
-file_name = dir_files(1).name; %find the file name of the (hopefully) only file that fits
-general_name_resfile = file_name(1:end-4); %char of file name minus the .mat, for later
-    %general_name possibly not needed??
-load(file_name); %load the data into workspace (table name is tbl_resfile)
 
 
 % number of trials
@@ -282,22 +273,17 @@ for chunk = 1:no_total_chunks
 
     for sample = 1:size(current_data,1) %loop through Data
     
-%         if tbl_subj_final{iteration,'ChunkNo_Overall'}==chunk %go in order and 
-%                 %don't repeat
                 
             if current_data{sample,'Sample_Message'}==9 %Main clause plays
                 mclause_start = current_data{sample,'Time_Stamp'};
                     % save this as time stamp of main clause starting
-%                 fprintf('main clause plays')
             end
             if current_data{sample,'Sample_Message'}==10 %key press
                 keypress = current_data{sample,'Time_Stamp'};
                     % save this as time stamp of key press after clause
-%                 fprintf('keypress')
             end
 
             if isnan(keypress) == 0 % if keypress has been assigned
-%                 fprintf('if keypress assigned')
 
                 % convert filelength from sec to msec
                 filelength_ms = current_data{sample,'FileLength'} *1000;
@@ -335,8 +321,6 @@ for chunk = 1:no_total_chunks
                 break %break out of sample loop
 
             end % if keypress has been assigned
-            
-%         end % end if we are in the correct chunk
         
     end % end sample loop
     
@@ -452,20 +436,6 @@ end %end passage index
 
 
 %% Pupil Pre-Processing
-
-%%% Zekveld & Kramer 2014 - below 3 standard deviations of the mean
-%%% diameter of the trial are coded as blinks; Zekveld et al., 2014 - 
-%%% eye-blinks with a duration of at least 880ms were replaced by linear
-%%% interpolation starting 4 samples (80ms) before and ending 8 samples 
-%%% (160ms) after a
-%%% blink (Van Orden et al., 2000)
-%%% Winn 2015 - interpolate short (<300ms) gaps of missing values starting
-%%% 100ms before and 166ms after
-%%% Also, Zekveld & Kramer 2014 and Zekveld et al., 2014 - a 5-point moving
-%%% average smoothing filter was passed over the selected and deblinked
-%%% pupil data
-%%% Winn et al 2015, for example, used 17-sample though -- possibly because
-%%% eye-tracker has higher sample rate
 
 
 % Sample Messages (for reference):
@@ -651,9 +621,6 @@ for pass = 1:no_passages
         col('Pupil_Size')),250,'omitnan');
     %creates a moving MEDIAN (to help with outliers) of vector, length 250, 
     %centered, omitting nans
-    %   Matt Winn et al 2016, 17 samples symmetrical moving average, 
-    %   60 Hz data rate
-    %       --> this is 16.67ms persample and ~283 ms being averaged over
 
 end
 
@@ -750,11 +717,6 @@ for pass = 1:no_passages
     
 end %passage index
 
-
-
-%%% Make table of just pre-recall period
-
-prerecall_mat = mat_subj_final(mat_subj_final(:,col('Pre_Recall'))==1,:);
 
 
 %% Pupil in Bins through Time
@@ -1250,9 +1212,6 @@ for pass = 1:no_passages
         %begins playing, 10=key pressed for clause, 11=display dot passage
         %ends
 
-%     baselines_passend(pass,3) = baseline_passend_cur;
-%     baselines_passend(pass,1) = subject_no;
-%     baselines_passend(pass,2) = pass;
     
     time_stamp_passend = mat_subj_final(pass_snd_end_iter,...
         col('Time_Stamp')); 
@@ -1261,7 +1220,7 @@ for pass = 1:no_passages
     % (pre-recall period)
     temp_pupil_raw = mat_subj_final(pass_snd_end_iter:...
         (recall_starts_iter-10),col('Pupil_Size'));
-    % grab the maximum pupil size and its index
+    % grab the maximum pupil size and its index (note that already smoothed and de-blinked)
     [max_pup,index_max_pup] = max(temp_pupil_raw,[],'omitnan');
     % make a small array of 5 samples before to 5 samples after that max,
     % to create a more stable peak:
@@ -1281,8 +1240,6 @@ for pass = 1:no_passages
         peak_pupil_temparr = temp_pupil_raw(end-no_samples_peak:end);
             % if peak is within 10 samples of the end, just take the 10
             % samples at the end
-%         peak_pupil_temparr = temp_pupil_raw((index_max_pup-...
-%             (no_samples_peak-diff)):(index_max_pup+diff));
     end
     % calculate the mean of that 10-sample peak
     peak_pupil = mean(peak_pupil_temparr,'omitnan');
@@ -1367,10 +1324,6 @@ for chunk = 1:no_total_chunks
         %finds the first 1 index that equals chunk index in the overallno
         %column and where sample message == 10 which is 
         %'Key Pressed for clause' (next clause)
-
-%     baselines_chunks(chunk,3) = baseline_chunkstart;
-%     baselines_chunks(chunk,1) = subject_no;
-%     baselines_chunks(chunk,2) = chunk;
     
     time_stamp_chunkstart = mat_subj_final(start_iter_chunk,...
         col('Time_Stamp')); 
@@ -1399,8 +1352,6 @@ for chunk = 1:no_total_chunks
         peak_pupil_temparr = temp_pupil_raw(end-no_samples_peak:end);
             % if peak is within 10 samples of the end, just take the 10
             % samples at the end
-%         peak_pupil_temparr = temp_pupil_raw((index_max_pup-...
-%             (no_samples_peak-diff)):(index_max_pup+diff));
     end
     % calculate the mean of that 10-sample peak:
     peak_pupil = mean(peak_pupil_temparr,'omitnan');
@@ -1494,41 +1445,41 @@ tbl_subj_peak_chunkend_allpart = array2table(...
 
 %% Write info to csvs etc.
 
-csvwrite('DAP_key_lat_allpart.csv',key_lat_allpart);
+csvwrite('PROJ_key_lat_allpart.csv',key_lat_allpart);
 
-csvwrite('DAP_baselineavg_perpass_allpart.csv',...
+csvwrite('PROJ_baselineavg_perpass_allpart.csv',...
     baselineavg_perpass_allpart);
-csvwrite('DAP_baselines_chunks_allpart.csv',...
+csvwrite('PROJ_baselines_chunks_allpart.csv',...
     baselines_chunks_allpart);
-csvwrite('DAP_baselines_passend_allpart.csv',...
+csvwrite('PROJ_baselines_passend_allpart.csv',...
     baselines_passend_allpart);
 
-csvwrite('DAP_pupil_wbinfo_allpart.csv',...
+csvwrite('PROJ_pupil_wbinfo_allpart.csv',...
     pupil_wbinfo_allpart);
 
-writetable(tbl_final_allpart,'DAP_tbl_sample_final_allpart.csv',...
+writetable(tbl_final_allpart,'PROJ_tbl_sample_final_allpart.csv',...
     'Delimiter',',');
 
-writetable(prerecall_tbl_allpart,'DAP_prerecall_tbl_allpart.csv',...
+writetable(prerecall_tbl_allpart,'PROJ_prerecall_tbl_allpart.csv',...
     'Delimiter',',');
 
 writetable(tbl_subj_bins_pass_start_allpart,...
-    'DAP_tbl_subj_bins_pass_start_allpart.csv','Delimiter',',');
+    'PROJ_tbl_subj_bins_pass_start_allpart.csv','Delimiter',',');
 writetable(tbl_subj_bins_pass_end_allpart,...
-    'DAP_tbl_subj_bins_pass_end_allpart.csv','Delimiter',',');
+    'PROJ_tbl_subj_bins_pass_end_allpart.csv','Delimiter',',');
 writetable(tbl_subj_bins_chunk_start_allpart,...
-    'DAP_tbl_subj_bins_chunk_start_allpart.csv','Delimiter',',');
+    'PROJ_tbl_subj_bins_chunk_start_allpart.csv','Delimiter',',');
 
 writetable(tbl_subj_peak_passend_allpart,...
-    'DAP_tbl_subj_peak_passend_allpart.csv','Delimiter',',');
+    'PROJ_tbl_subj_peak_passend_allpart.csv','Delimiter',',');
 writetable(tbl_subj_peak_chunkend_allpart,...
-    'DAP_tbl_subj_peak_chunkend_allpart.csv','Delimiter',',');
+    'PROJ_tbl_subj_peak_chunkend_allpart.csv','Delimiter',',');
 
 
 
 
 % change working directory back
-cd('/Users/nicoleayasse 1/Documents/MATLAB');
+cd('/Documents/MATLAB');
 
 
 
