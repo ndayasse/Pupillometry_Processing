@@ -86,8 +86,6 @@ if participant_info{participant,2} ~= 0
         subject_no = str2double(subject_no{1});
     end
     
-%     subject_no
-%     participant_info(participant,1)
     
 % Load Sample Report data
 sdir = strcat(folder,'/','PROJ_onesubjprocess_',subject_str,'.mat'); %put the name all together
