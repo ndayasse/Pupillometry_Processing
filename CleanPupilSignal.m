@@ -92,9 +92,11 @@ switch nargin
                 %make up 250ms and round up
             % perform smoothing function:
             if moving_window_fntn=="median"
-                output_vector = movmedian(vector_splinefillmiss,samples_per_250ms);
+                output_vector = movmedian(vector_splinefillmiss,...
+                    samples_per_250ms,'omitnan');
             elseif moving_window_fntn=="mean"
-                output_vector = movmean(duration,samples_per_250ms);
+                output_vector = movmean(vector_splinefillmiss,...
+                    samples_per_250ms,'omitnan');
             end
         
         end %end if proportion missing is less than the threshold 
@@ -159,9 +161,11 @@ switch nargin
             %make up 250ms and round up
         % perform smoothing function:
         if moving_window_fntn=="median"
-            output_vector = movmedian(vector_splinefillmiss,samples_per_250ms);
+            output_vector = movmedian(vector_splinefillmiss,...
+                samples_per_250ms,'omitnan');
         elseif moving_window_fntn=="mean"
-            output_vector = movmean(duration,samples_per_250ms);
+            output_vector = movmean(vector_splinefillmiss,...
+                samples_per_250ms,'omitnan');
         end
         
 end %end switch based on nargin
