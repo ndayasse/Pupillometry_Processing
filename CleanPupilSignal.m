@@ -31,41 +31,52 @@ switch nargin
     
     case 5 %all inputs used including remove_prop
         
-        %% Calculate pupil mean and standard deviation (will need for identifying
-        % blinks):
+        %% De-blink:
+        
+        % Calculate pupil mean and standard deviation (will need for 
+        % identifying blinks):
         pupil_mean = nanmean(vector);
         pupil_std = std(vector,'omitnan');
 
-        % Go through and identify blinks and remove them
-        count_blink_samples = 1;
-        for iteration = 1:size(vector,1)
-
-            if ~isnan(vector(iteration)) %if pupil size is not NaN
-
-                if vector(iteration) < (pupil_mean-(3*pupil_std)) 
-                        %blink identifier
-
-                    vector(iteration) = NaN; 
-                        %should re-assign the value of the current pupil size
-                    count_blink_samples = count_blink_samples + 1;
-                        %count a blink sample
-
-                elseif vector(iteration) > (pupil_mean+(3*pupil_std)) 
-                    %suggests an odd event occurred such as head moving away
-
-                    vector(iteration) = NaN; 
-                        %should re-assign the value of the current pupil size
-                    count_blink_samples = count_blink_samples + 1;
-                        %count a blink sample
-
-                end
-
+        % Go through and identify blinks and remove them (make NaN)
+        indices = find(vector(:,1)<(pupil_mean-(3*pupil_std)));
+            %save the index numbers of where it is a blink
+        blink_samples = sum(vector(:,1)<(pupil_mean-(3*pupil_std)));
+            %count number of samples that are blinks
+        vector(vector(:,1)<(pupil_mean-(3*pupil_std)),:) = NaN;
+            %turn the blinks into NaN's
+        D = (diff([0,diff(indices')==1,0]))'; 
+            %find differences in indices to find consecutive blinked
+            %samples --> because need to take out 80ms before to 160ms
+            %after a blink (see Zekveld, Rudner, et al., 2014)
+        first = indices(D>0); %first indices of consecutive blinks
+        last = indices(D<0); %last indices of consecutive blinks
+        % Deal with those blinks that occur within the first 80ms or the
+        % last 160ms:
+        ind_less_80 = indices(:,1)<=80; %logical array of any indices <=80
+        if any(ind_less_80) %if any indices are within the first 80
+            vector(1:80,1) = NaN; %then make all the first 80 NaN
+        end
+        ind_last_160 = indices(:,1)>=(size(vector,1)-160); 
+            %logical array of any indices within last 160
+        if any(ind_last_160) %if any indices are within last 160
+            vector((size(vector,1)-160):size(vector,1)) = NaN;
+                %then make all the last 160 NaN
+        end
+        % now take out the 80ms before and 160ms after a blink:
+        for i = 1:length(first)
+            if first(i) > 80
+                vector((first(i)-80):first(i),1) = NaN;
             end
-
-        end %end going through vector looking for blinks to remove
+        end
+        for i = 1:length(last)
+            if last(i) < 160
+                vector(last(i):(last(i)+160),1) = NaN;
+            end
+        end
 
         %% Count percentage of vector that is missing/blink:
-        prop_missing = count_blink_samples / length(vector);
+        prop_missing = blink_samples / length(vector);
         if prop_missing > 0.2 %if more than 20% is missing
             warning('>20% of your pupil data is missing, consider removing trial')
         end
@@ -73,11 +84,16 @@ switch nargin
             output_vector = NaN(size(vector));
         else
 
-            %% Use interpolation to replace missing values:
             if method=="spline"
-                vector_splinefillmiss = fillmissing(vector,'spline');
+                vector_splinefillmiss = fillmissing(vector,'spline',1,...
+                    'EndValues','nearest'); %will use spline interp but replace 
+                        %the EndValues with the nearest values (and operates
+                        %along dimension 1, which is what the 1 indicates)
             elseif method=="linear"
-                vector_splinefillmiss = fillmissing(vector,'linear');
+                vector_splinefillmiss = fillmissing(vector,'linear',1,...
+                    'EndValues','nearest'); %will use linear interp but replace 
+                        %the EndValues with the nearest values (and operates
+                        %along dimension 1, which is what the 1 indicates)
             else
                 error('method must be given as spline or linear')
             end
@@ -103,50 +119,67 @@ switch nargin
         
     case 4 %remove_prop missing/not provided
         
-        %% Calculate pupil mean and standard deviation (will need for identifying
-        % blinks):
+        %% De-blink:
+        
+        % Calculate pupil mean and standard deviation (will need for 
+        % identifying blinks):
         pupil_mean = nanmean(vector);
         pupil_std = std(vector,'omitnan');
 
-        % Go through and identify blinks and remove them
-        count_blink_samples = 1;
-        for iteration = 1:size(vector,1)
-
-            if ~isnan(vector(iteration)) %if pupil size is not NaN
-
-                if vector(iteration) < (pupil_mean-(3*pupil_std)) 
-                        %blink identifier
-
-                    vector(iteration) = NaN; 
-                        %should re-assign the value of the current pupil size
-                    count_blink_samples = count_blink_samples + 1;
-                        %count a blink sample
-
-                elseif vector(iteration) > (pupil_mean+(3*pupil_std)) 
-                    %suggests an odd event occurred such as head moving away
-
-                    vector(iteration) = NaN; 
-                        %should re-assign the value of the current pupil size
-                    count_blink_samples = count_blink_samples + 1;
-                        %count a blink sample
-
-                end
-
+        % Go through and identify blinks and remove them (make NaN)
+        indices = find(vector(:,1)<(pupil_mean-(3*pupil_std)));
+            %save the index numbers of where it is a blink
+        blink_samples = sum(vector(:,1)<(pupil_mean-(3*pupil_std)));
+            %count number of samples that are blinks
+        vector(vector(:,1)<(pupil_mean-(3*pupil_std)),:) = NaN;
+            %turn the blinks into NaN's
+        D = (diff([0,diff(indices')==1,0]))'; 
+            %find differences in indices to find consecutive blinked
+            %samples --> because need to take out 80ms before to 160ms
+            %after a blink (see Zekveld, Rudner, et al., 2014)
+        first = indices(D>0); %first indices of consecutive blinks
+        last = indices(D<0); %last indices of consecutive blinks
+        % Deal with those blinks that occur within the first 80ms or the
+        % last 160ms:
+        ind_less_80 = indices(:,1)<=80; %logical array of any indices <=80
+        if any(ind_less_80) %if any indices are within the first 80
+            vector(1:80,1) = NaN; %then make all the first 80 NaN
+        end
+        ind_last_160 = indices(:,1)>=(size(vector,1)-160); 
+            %logical array of any indices within last 160
+        if any(ind_last_160) %if any indices are within last 160
+            vector((size(vector,1)-160):size(vector,1)) = NaN;
+                %then make all the last 160 NaN
+        end
+        % now take out the 80ms before and 160ms after a blink:
+        for i = 1:length(first)
+            if first(i) > 80
+                vector((first(i)-80):first(i),1) = NaN;
             end
-
-        end %end going through vector looking for blinks to remove
+        end
+        for i = 1:length(last)
+            if last(i) < 160
+                vector(last(i):(last(i)+160),1) = NaN;
+            end
+        end
 
         %% Count percentage of vector that is missing/blink:
-        prop_missing = count_blink_samples / length(vector);
+        prop_missing = blink_samples / length(vector);
         if prop_missing > 0.2 %if more than 20% is missing
             warning('>20% of your pupil data is missing, consider removing trial')
         end
 
         %% Use interpolation to replace missing values:
         if method=="spline"
-            vector_splinefillmiss = fillmissing(vector,'spline');
+            vector_splinefillmiss = fillmissing(vector,'spline',1,...
+                'EndValues','nearest'); %will use spline interp but replace 
+                    %the EndValues with the nearest values (and operates
+                    %along dimension 1, which is what the 1 indicates)
         elseif method=="linear"
-            vector_splinefillmiss = fillmissing(vector,'linear');
+            vector_splinefillmiss = fillmissing(vector,'linear',1,...
+                'EndValues','nearest'); %will use linear interp but replace 
+                    %the EndValues with the nearest values (and operates
+                    %along dimension 1, which is what the 1 indicates)
         else
             error('method must be given as spline or linear')
         end
@@ -169,6 +202,16 @@ switch nargin
         end
         
 end %end switch based on nargin
+
+    %% Make sure we don't have any negative values left after that 
+    % (since pupil size can't be negative) and if we do then replace it
+    % with the nearest value
+
+    output_vector(output_vector<0) = NaN; 
+        %replace any negative values with NaN
+    output_vector = fillmissing(output_vector, 'nearest', 1);
+        %replace any NaN's (which used to be negative) with the nearest
+        %value (will default to the right if otherwise equal)
 
 
 end % end function
