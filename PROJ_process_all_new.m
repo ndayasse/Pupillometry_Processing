@@ -1,7 +1,5 @@
 clear;
 
-% change working directory to this expt's
-cd('/Documents/MATLAB/PROJ');
 
 %% Read in Participant Info
 
@@ -25,8 +23,6 @@ recall_time_ms = 3000; %time in milliseconds of pause from the end of
     %passage/participant's final key press until they are prompted to
     %recall the passage
 
-% may want later for naming and saving things, etc.
-folder = '/Users/nicoleayasse 1/Documents/MATLAB/PROJ';
 
         
 %% What Sample Messages mean (for reference)
@@ -1177,8 +1173,7 @@ writetable(tbl_subj_peak_chunkend_allpart,...
 
 
 
-% change working directory back
-cd('/Documents/MATLAB');
+
 
 
 
