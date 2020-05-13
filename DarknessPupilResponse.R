@@ -134,29 +134,29 @@ AllExpts.PupilBW.Binned.nona.dark[,paste("ot", 1:2, sep="")] <-
 
 # run models:
 model.b.0 <- lmer(PupilSizePixels ~ 1 + 
-                  (1+ot1+ot2|Study),
+                  (1+ot1+ot2|Study) +(1+ot1+ot2|Study.Subject.No),
                 control = lmerControl(optimizer="bobyqa"), 
                 data=AllExpts.PupilBW.Binned.nona.dark, REML=F)
 model.b.1 <- lmer(PupilSizePixels ~ ot1 + 
-                    (1+ot1+ot2|Study),
+                    (1+ot1+ot2|Study) +(1+ot1+ot2|Study.Subject.No),
                   control = lmerControl(optimizer="bobyqa"), 
                   data=AllExpts.PupilBW.Binned.nona.dark, REML=F)
 model.b.2 <- lmer(PupilSizePixels ~ ot1 +ot2 + 
-                    (1+ot1+ot2|Study),
+                    (1+ot1+ot2|Study) +(1+ot1+ot2|Study.Subject.No),
                   control = lmerControl(optimizer="bobyqa"), 
                   data=AllExpts.PupilBW.Binned.nona.dark, REML=F)
 model.b.3 <- lmer(PupilSizePixels ~ ot1 +ot2 +Group.All + 
-                    (1+ot1+ot2|Study),
+                    (1+ot1+ot2|Study) +(1+ot1+ot2|Study.Subject.No),
                   control = lmerControl(optimizer="bobyqa"), 
                   data=AllExpts.PupilBW.Binned.nona.dark, REML=F)
 model.b.4 <- lmer(PupilSizePixels ~ ot1 +ot2 +Group.All
                   +ot1:Group.All + 
-                    (1+ot1+ot2|Study),
+                    (1+ot1+ot2|Study) +(1+ot1+ot2|Study.Subject.No),
                   control = lmerControl(optimizer="bobyqa"), 
                   data=AllExpts.PupilBW.Binned.nona.dark, REML=F)
 model.b.5 <- lmer(PupilSizePixels ~ ot1 +ot2 +Group.All
                   +ot1:Group.All +ot2:Group.All + 
-                    (1+ot1+ot2|Study),
+                    (1+ot1+ot2|Study) +(1+ot1+ot2|Study.Subject.No),
                   control = lmerControl(optimizer="bobyqa"), 
                   data=AllExpts.PupilBW.Binned.nona.dark, REML=F)
 
